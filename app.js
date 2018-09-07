@@ -1,26 +1,96 @@
-var createError = require('http-errors');
-var express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var logger = require('morgan');
+const createError = require('http-errors'),
+ express = require('express'),
+ path = require('path'),
+ cookieParser = require('cookie-parser'),
+ logger = require('morgan');
+ mongoose = require('mongoose'),
+ session = require('express-session'),
+ passport=require('passport'),
+ SteamStrategy = require('passport-steam').Strategy,
+ indexRoutes = require('./routes/index'),
+ authRoutes = require('./routes/auth'),
+ apiRoutes = require('./routes/api'),
+ connectionString = 'mongodb://csgo_admin'+process.env.CS_DATABASE_PASSWORD+process.env.CS_BASE_URI + "/" + process.env.CS_DATABASE;
+ User = require('./models/user');
+console.log(connectionString);
+mongoose.connect(connectionString,{ server: { reconnectTries: 5 } }).then(res => console.log(res));
+//Determine data to be stored in session
+passport.serializeUser(function(user, done) {
+	//save JSON data to session
+	done(null, user._json);
+});
 
-var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
+//Match session data with DB data and parse
+passport.deserializeUser(function(obj, done) {
+	//Search DB for user with session's steam ID
+	User.findOne({steam_id: obj.steamid},
+		(err, user) => {
+			//Fetched object is attached to request object (req.user)
+			done(err, user);
+		});
+});
 
-var app = express();
+//Specify Passport authentication strategy (Steam)
+passport.use(new SteamStrategy({
+	returnURL: process.env.CS_BASE_URI + '/auth/steam/return',
+	realm: process.env.CS_BASE_URI,
+	apiKey: process.env.CS_STEAM_API_KEY
+}, function(identifier, profile, done) {
+	//Check if user exists in DB
+	User.findOne({steam_id: profile.id}, function(err, user) {
+		if(err) throw err;
+		if(!user) {
+			//User does not exist, define new user
+			var newUser = User({
+				steam_id: profile.id,
+				username: profile.displayName,
+				photo_url: profile.photos[2].value
+			});
+			//Save new user to DB
+			newUser.save(function(err) {
+				if(err) throw err;
+				console.log('New user ' + profile.displayName + '[' + profile.id + '] created');
+			});
+		}
+	});
+	profile.identifier = identifier;
+	return done(null, profile);
+}));
+// app.use(session({ 
+//   resave: false, 
+//   saveUninitialized: false, 
+//   secret: 'a secret' }));
+const app = express();
+
+//Initialise session
+app.use(session({
+	secret: 's3cr3tStr1nG',
+	saveUninitialized: false,
+	resave: true
+}));
+
+//Authentication middleware
+app.use(passport.initialize());
+app.use(passport.session());
+
+//Point to static asset directory
+app.use(express.static('public'));
+
+//Define routes
+app.use('/auth', authRoutes);
+app.use('/api', apiRoutes);
+app.use('/', indexRoutes);
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
+
 
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
-
-app.use('/', indexRouter);
-app.use('/users', usersRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
