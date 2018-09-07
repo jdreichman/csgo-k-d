@@ -2,19 +2,18 @@ const express = require('express'),
 	router = express.Router(),
 	SteamCommunity = require('steamcommunity'),
 	community = new SteamCommunity(),
-	path = require('path');
+	path = require('path'),
+	passport = require('passport');
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
   res.render('index', { title: 'CS:GO Deathmatch Point System' });
 });
 
-router.get('/account', ensureAuthenticated, function(req, res) {
-	res.render('account', '../public', 'account.html');
-});
-
-router.get('/inventory', ensureAuthenticated, function(req, res) {
-	res.render('inventory', '../public', 'inventory.html');
+router.get('/profile', function(req, res, next) {
+	console.log('[API] Checking a user\'s auth status');
+	if(req.isAuthenticated()) res.render('profile', { username: req.user.username, points : req.user.points });
+	return res.send(false);
 });
 
 router.get('/logout', function(req, res) {
@@ -27,5 +26,4 @@ function ensureAuthenticated(req, res, next) {
 	res.redirect('/');
 }
 
-module.exports = router;
 module.exports = router;

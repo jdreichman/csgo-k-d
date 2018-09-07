@@ -4,7 +4,10 @@ var Schema = mongoose.Schema;
 var userSchema = new Schema({
 	steam_id: { type: String, required: true, unique: true },
 	username: { type: String, required: true },
-	photo_url: String
+	photo_url: String,
+	kills: Number,
+	deaths: Number,
+	points: Number
 }, {
 	//Built-in timestamping with custom naming
 	timestamps: {createdAt: 'created_at', updatedAt: 'updated_at'}

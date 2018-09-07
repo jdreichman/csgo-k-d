@@ -4,54 +4,61 @@ const express = require('express'),
 	User = require('../models/user'),
 	community = new SteamCommunity();
 
-router.route('/inventory/').get(ensureAuthenticated, function(req, res){
-	//GET route (get inventory of logged in user)
-	console.log("[API] Getting Inventory " + req.user.steam_id);
-	community.getUserInventoryContents(req.user.steam_id, 440, 2, true, (err, inv) => {
-		if(err) throw err;
-		res.status(200).json(inv);
-	});
-});
-
-router.route('/inventory/:steam_id').get(ensureAuthenticated, function(req, res){
-	//GET route (get inventory with user ID)
-	console.log("[API] Getting Inventory " + req.params.steam_id);
-	community.getUserInventoryContents(req.params.steam_id, 440, 2, true, (err, inv) => {
-		if(err) throw err;
-		res.status(200).json(inv);
-	});
-});
-
-router.route('/user/').get(ensureAuthenticated, function(req, res){
-	console.log("[API] Getting User " + req.user.steam_id);
-	//GET route (get logged in user)
+router.route('/kill').get(ensureAuthenticated,function(req,res){
 	User.findOne({steam_id: req.user.steam_id}, function(err, user) {
 		if(err) throw err;
-		if(user) {
-			//User exists, get data
-			res.json(user);
-		}
-		else {
-			//User does not exist, 404 not found
-			res.status(404).send('Invalid user');
+		if(!user) {
+			//User does not exist, define new user
+			var newUser = User({
+				steam_id: req.user.steam_id,
+				username: req.user.username,
+				photo_url: null,
+				kills: 1,
+				deaths: 0,
+				points: 1
+			});
+			//Save new user to DB
+			newUser.save(function(err) {
+				if(err) throw err;
+				console.log('New user ' + req.user.username + '[' + req.user.steam_id + '] created');
+			});
+		} else {
+			User.update(
+				{
+					steam_id:user.steam_id
+				}, 
+				{
+					kills : user.kills + 1,
+					points: parseInt(user.points) + parseInt(process.env.CS_POINTS_ADD)
+				},
+				function(err){
+				if(err) throw err;
+			})
 		}
 	});
+	res.send();
 });
 
-router.route('/user/:steam_id').get(ensureAuthenticated, function(req, res){
-	console.log("[API] Getting User " + req.params.steam_id);
-	//GET route (get user with ID)
-	User.findOne({steam_id: req.params.steam_id}, function(err, user) {
+router.route('/death').get(ensureAuthenticated,function(req,res){
+	User.findOne({steam_id: req.user.steam_id}, function(err, user) {
 		if(err) throw err;
-		if(user) {
-			//User exists, get data
-			res.json(user);
-		}
-		else {
-			//User does not exist, 404 not found
-			res.status(404).send('Invalid user');
+		if(!user) {
+
+		} else {
+			User.update(
+				{
+					steam_id:user.steam_id
+				}, 
+				{
+					deaths : user.deaths + 1,
+					points: parseInt(user.points) - parseInt(process.env.CS_POINTS_REMOVE)
+				},
+				function(err){
+				if(err) throw err;
+			})
 		}
 	});
+	res.send();
 });
 
 router.route('/auth/loginstatus').get(function(req, res) {
@@ -62,7 +69,7 @@ router.route('/auth/loginstatus').get(function(req, res) {
 
 function ensureAuthenticated(req, res, next) {
 	if(req.isAuthenticated()) return next();
-	res.redirect('/');
+	res.send(false);
 }
 
 module.exports = router;

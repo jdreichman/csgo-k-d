@@ -1,19 +1,19 @@
 const createError = require('http-errors'),
- express = require('express'),
- path = require('path'),
- cookieParser = require('cookie-parser'),
- logger = require('morgan');
- mongoose = require('mongoose'),
- session = require('express-session'),
- passport=require('passport'),
- SteamStrategy = require('passport-steam').Strategy,
- indexRoutes = require('./routes/index'),
- authRoutes = require('./routes/auth'),
- apiRoutes = require('./routes/api'),
- connectionString = 'mongodb://csgo_admin'+process.env.CS_DATABASE_PASSWORD+process.env.CS_BASE_URI + "/" + process.env.CS_DATABASE;
- User = require('./models/user');
-console.log(connectionString);
-mongoose.connect(connectionString,{ server: { reconnectTries: 5 } }).then(res => console.log(res));
+	config = require('./config');
+	express = require('express'),
+	path = require('path'),
+	cookieParser = require('cookie-parser'),
+	logger = require('morgan');
+	mongoose = require('mongoose'),
+	session = require('express-session'),
+	passport=require('passport'),
+	SteamStrategy = require('passport-steam').Strategy,
+	indexRoutes = require('./routes/index'),
+	authRoutes = require('./routes/auth'),
+	apiRoutes = require('./routes/api'),
+	User = require('./models/user');
+
+mongoose.connect(config.connectionString);
 //Determine data to be stored in session
 passport.serializeUser(function(user, done) {
 	//save JSON data to session
@@ -26,14 +26,14 @@ passport.deserializeUser(function(obj, done) {
 	User.findOne({steam_id: obj.steamid},
 		(err, user) => {
 			//Fetched object is attached to request object (req.user)
-			done(err, user);
+			done(null, user);
 		});
 });
 
 //Specify Passport authentication strategy (Steam)
 passport.use(new SteamStrategy({
-	returnURL: process.env.CS_BASE_URI + '/auth/steam/return',
-	realm: process.env.CS_BASE_URI,
+	returnURL: 'http://'+process.env.CS_BASE_URI+ ":"+process.env.PORT+ '/auth/steam/return',
+	realm: 'http://'+process.env.CS_BASE_URI +":"+ process.env.PORT,
 	apiKey: process.env.CS_STEAM_API_KEY
 }, function(identifier, profile, done) {
 	//Check if user exists in DB
@@ -44,7 +44,10 @@ passport.use(new SteamStrategy({
 			var newUser = User({
 				steam_id: profile.id,
 				username: profile.displayName,
-				photo_url: profile.photos[2].value
+				photo_url: profile.photos[2].value,
+				kills: 0,
+				deaths: 0,
+				points: 0
 			});
 			//Save new user to DB
 			newUser.save(function(err) {
@@ -56,10 +59,7 @@ passport.use(new SteamStrategy({
 	profile.identifier = identifier;
 	return done(null, profile);
 }));
-// app.use(session({ 
-//   resave: false, 
-//   saveUninitialized: false, 
-//   secret: 'a secret' }));
+
 const app = express();
 
 //Initialise session
