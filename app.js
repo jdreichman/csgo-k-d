@@ -34,8 +34,8 @@ passport.deserializeUser(function(obj, done) {
 
 //Specify Passport authentication strategy (Steam)
 passport.use(new SteamStrategy({
-	returnURL: process.env.CS_BASE_URI+'/auth/steam/return',
-	realm: process.env.CS_BASE_URI,
+	returnURL: 'https://'+process.env.CS_BASE_URI+":"+process.env.PORT+'/auth/steam/return',
+	realm: 'https://'+process.env.CS_BASE_URI+":"+process.env.PORT,
 	apiKey: process.env.CS_STEAM_API_KEY
 }, function(identifier, profile, done) {
 	//Check if user exists in DB
