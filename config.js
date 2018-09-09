@@ -1,5 +1,4 @@
 const config = 
     {
-        connectionString : 'mongodb://'+escape(process.env.CS_DATABASE)+':'+process.env.CS_DATABASE_PASSWORD+"@"+process.env.CS_DATABASE_URI + "/" + escape(process.env.CS_DATABASE),
-    };
+        connectionString : 'mongodb://heroku_qf3m42l1:l1ikn9umn5gj9rpsk53uaptmhs@ds251112.mlab.com:51112/heroku_qf3m42l1'    };
 module.exports = config;
