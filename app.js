@@ -33,7 +33,7 @@ passport.deserializeUser(function(obj, done) {
 
 //Specify Passport authentication strategy (Steam)
 passport.use(new SteamStrategy({
-	returnURL: 'http://'+process.env.CS_BASE_URI+":80"+'/auth/steam/return',
+	returnURL: 'http://'+process.env.CS_BASE_URI+":"+process.env.PORT+'/auth/steam/return',
 	realm: 'http://'+process.env.CS_BASE_URI+":"+process.env.PORT,
 	apiKey: process.env.CS_STEAM_API_KEY
 }, function(identifier, profile, done) {
