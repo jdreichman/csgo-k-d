@@ -60,7 +60,6 @@ router.route('/death').get(ensureAuthenticated,function(req,res){
 	});
 	res.send();
 });
-
 router.route('/auth/loginstatus').get(function(req, res) {
 	console.log('[API] Checking a user\'s auth status');
 	if(req.isAuthenticated()) return res.json(req.user);
