@@ -11,7 +11,9 @@ const createError = require('http-errors'),
 	indexRoutes = require('./routes/index'),
 	authRoutes = require('./routes/auth'),
 	apiRoutes = require('./routes/api'),
-	User = require('./models/user');
+	User = require('./models/user'),
+	http = require('http')
+	;
 
 mongoose.connect(config.connectionString);
 //Determine data to be stored in session
@@ -60,13 +62,13 @@ passport.use(new SteamStrategy({
 	return done(null, profile);
 }));
 
-const app = express();
-
+const app = express(),
+	server = http.createServer(app);
 //Initialise session
 app.use(session({
 	secret: 's3cr3tStr1nG',
 	saveUninitialized: false,
-	resave: true
+	resave: false
 }));
 
 //Authentication middleware
@@ -107,5 +109,5 @@ app.use(function(err, req, res, next) {
   res.status(err.status || 500);
   res.render('error');
 });
-
+server.listen();
 module.exports = app;
