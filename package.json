@@ -11,6 +11,11 @@
     "express": "~4.16.0",
     "http-errors": "~1.6.2",
     "morgan": "~1.9.0",
-    "pug": "2.0.0-beta11"
+    "pug": "2.0.0-beta11",
+    "express-session":"1.15.6",
+    "mongoose":"5.2.13",
+    "passport":"0.4.0",
+    "passport-steam":"1.0.10",
+    "steamcommunity":"3.37.1"
   }
 }
