@@ -11,7 +11,7 @@ const createError = require('http-errors'),
 	indexRoutes = require('./routes/index'),
 	authRoutes = require('./routes/auth'),
 	apiRoutes = require('./routes/api'),
-	User = require('./models/user'),
+	User = require('./models/user')
 	;
 
 mongoose.connect(config.connectionString);
