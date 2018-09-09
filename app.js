@@ -11,7 +11,7 @@ const createError = require('http-errors'),
 	indexRoutes = require('./routes/index'),
 	authRoutes = require('./routes/auth'),
 	apiRoutes = require('./routes/api'),
-	User = require('./models/user')
+	User = require('./models/user'),
 	;
 
 mongoose.connect(config.connectionString);
@@ -33,8 +33,8 @@ passport.deserializeUser(function(obj, done) {
 
 //Specify Passport authentication strategy (Steam)
 passport.use(new SteamStrategy({
-	returnURL: 'https://'+process.env.CS_BASE_URI+":"+PORT+'/auth/steam/return',
-	realm: 'https://'+process.env.CS_BASE_URI+":"+PORT,
+	returnURL: 'https://'+process.env.CS_BASE_URI+":"+process.env.PORT+'/auth/steam/return',
+	realm: 'https://'+process.env.CS_BASE_URI+":"+process.env.PORT,
 	apiKey: process.env.CS_STEAM_API_KEY
 }, function(identifier, profile, done) {
 	//Check if user exists in DB
